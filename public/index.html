@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SLITHER" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="theme-color" content="#020309" />
+    <link rel="apple-touch-icon" href="icon-180.png" />
+    <link rel="icon" href="icon-180.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <title>SLITHER//CC</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas id="stage"></canvas>
+    <div id="crt" aria-hidden="true"></div>
+    <div id="safe-probe" aria-hidden="true"></div>
+
+    <header id="hud" class="hidden">
+      <div class="stat"><span class="lbl">SCORE</span><span class="val" id="hud-score">000000</span></div>
+      <div class="stat"><span class="lbl">LENGTH</span><span class="val" id="hud-len">04</span></div>
+      <div class="stat"><span class="lbl">CLOCK</span><span class="val" id="hud-hz">8.0<small>HZ</small></span></div>
+      <button id="btn-pause" class="icon-btn" aria-label="Pause"><span></span><span></span></button>
+    </header>
+
+    <div id="hint" class="hidden">
+      <div class="swipe-glyph"><i></i></div>
+      <div class="hint-text">SWIPE TO STEER</div>
+      <div class="hint-sub">EDGES WRAP // DON'T BITE YOURSELF</div>
+    </div>
+
+    <section id="screen-title" class="screen">
+      <div class="title-wrap">
+        <div class="kicker">// NEURAL SERPENT PROTOCOL v2.077</div>
+        <h1 class="logo glitch" data-text="SLITHER">SLITHER</h1>
+        <div class="logo-sub"><span>//</span>CC<span class="blink">_</span></div>
+        <div class="menu">
+          <button class="btn primary" id="btn-play" data-glitch><span>▶ JACK IN</span></button>
+          <button class="btn" id="btn-config" data-glitch><span>⚙ CONFIG</span></button>
+        </div>
+        <div class="footer-tip">SWIPE TO STEER · EDGES WRAP · ONLY YOUR TAIL CAN KILL YOU</div>
+      </div>
+    </section>
+
+    <section id="screen-pause" class="screen hidden">
+      <div class="panel">
+        <div class="panel-tag">SYS.HALT</div>
+        <h2 class="glitch" data-text="PAUSED">PAUSED</h2>
+        <div class="menu">
+          <button class="btn primary" id="btn-resume"><span>▶ RESUME</span></button>
+          <button class="btn" id="btn-restart"><span>↻ REBOOT</span></button>
+          <button class="btn" id="btn-pause-config"><span>⚙ CONFIG</span></button>
+          <button class="btn ghost" id="btn-quit"><span>⏏ DISCONNECT</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-over" class="screen hidden">
+      <div class="panel danger">
+        <div class="panel-tag">FATAL_EXCEPTION 0xDEAD</div>
+        <h2 class="glitch" data-text="CORE DUMPED" id="over-title">CORE DUMPED</h2>
+        <div class="over-reason" id="over-reason">SELF-COLLISION DETECTED</div>
+        <div class="stats">
+          <div><span class="lbl">SCORE</span><span class="val" id="over-score">0</span></div>
+          <div><span class="lbl">LENGTH</span><span class="val" id="over-len">0</span></div>
+          <div><span class="lbl">UPTIME</span><span class="val" id="over-time">00:00</span></div>
+        </div>
+        <div class="menu">
+          <button class="btn primary" id="btn-again"><span>↻ REBOOT</span></button>
+          <button class="btn" id="btn-over-config"><span>⚙ CONFIG</span></button>
+          <button class="btn ghost" id="btn-over-quit"><span>⏏ DISCONNECT</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-settings" class="screen hidden">
+      <div class="settings">
+        <div class="settings-head">
+          <button class="btn small" id="btn-settings-back"><span>◂ BACK</span></button>
+          <div class="settings-title glitch" data-text="CONFIG">CONFIG</div>
+          <div class="settings-id">SYS/CFG</div>
+        </div>
+        <div class="preview-frame"><canvas id="preview"></canvas></div>
+        <nav class="tabs" id="tabs">
+          <button data-tab="snake" class="on">SNAKE</button>
+          <button data-tab="food">FOOD</button>
+          <button data-tab="board">BOARD</button>
+          <button data-tab="audio">AUDIO</button>
+        </nav>
+        <div class="settings-body" id="settings-body"></div>
+      </div>
+    </section>
+
+    <div id="toast" class="hidden"></div>
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
