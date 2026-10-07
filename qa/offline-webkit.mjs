@@ -5,9 +5,10 @@ import { webkit, devices } from 'playwright';
 import { spawn } from 'node:child_process';
 
 const PORT = 47000 + Math.floor(Math.random() * 1000);
-const URL = `https://localhost:${PORT}/`;
+const URL = `http://localhost:${PORT}/`;
 const srv = spawn('node', ['server.js'], { env: { ...process.env, PORT: String(PORT) }, stdio: 'pipe' });
 await new Promise((r) => srv.stdout.on('data', (d) => String(d).includes('online') && r()));
+// server.js lives at the repo root; run from there.
 
 let ok = true;
 const check = (name, pass, extra = '') => {
@@ -15,7 +16,7 @@ const check = (name, pass, extra = '') => {
   console.log(`${pass ? 'PASS' : 'FAIL'} ${name}${extra ? ` — ${extra}` : ''}`);
 };
 const browser = await webkit.launch();
-const ctx = await browser.newContext({ ...devices['iPhone 15 Pro'], ignoreHTTPSErrors: true, serviceWorkers: 'allow' });
+const ctx = await browser.newContext({ ...devices['iPhone 15 Pro'], serviceWorkers: 'allow' });
 const errors = [];
 const page = await ctx.newPage();
 page.on('pageerror', (e) => errors.push(e.message));

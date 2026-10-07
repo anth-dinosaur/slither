@@ -7,7 +7,7 @@ fs.mkdirSync(OUT, { recursive: true });
 const b = await webkit.launch();
 const errors = [];
 async function open(dev, extra = {}) {
-  const ctx = await b.newContext({ ...devices[dev], ignoreHTTPSErrors: true, ...extra });
+  const ctx = await b.newContext({ ...devices[dev], ...extra });
   const p = await ctx.newPage();
   p.on('pageerror', (e) => errors.push(`${dev}: ${e.message}`));
   await p.addInitScript(() => localStorage.clear());

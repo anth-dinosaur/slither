@@ -2,8 +2,8 @@
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
 const URL = process.argv[2];
-const b = await chromium.launch({ args: ['--ignore-certificate-errors'] });
-const ctx = await b.newContext({ ...devices['iPhone 13'], ignoreHTTPSErrors: true });
+const b = await chromium.launch();
+const ctx = await b.newContext({ ...devices['iPhone 13'] });
 const p = await ctx.newPage();
 await p.goto(URL);
 const before = await p.evaluate(async () => { await navigator.serviceWorker.ready; return caches.keys(); });

@@ -1,6 +1,6 @@
-// Offline PWA check (Chromium): install SW over HTTPS, go offline, reload, play.
+// Offline PWA check (Chromium): install SW, go offline, reload, play.
 // WebKit is covered by qa/offline-webkit.mjs.
-// usage: node qa/offline.mjs https://localhost:PORT/
+// usage: node qa/offline.mjs http://localhost:PORT/
 import { chromium, devices } from 'playwright';
 
 const URL = process.argv[2];
@@ -12,8 +12,8 @@ const check = (name, pass, extra = '') => {
 
 for (const [label, type, dev] of [['chromium', chromium, 'iPhone 13']]) {
   console.log(`\n== ${label}`);
-  const browser = await type.launch(label === 'chromium' ? { args: ['--ignore-certificate-errors'] } : {});
-  const ctx = await browser.newContext({ ...devices[dev], ignoreHTTPSErrors: true, serviceWorkers: 'allow' });
+  const browser = await type.launch();
+  const ctx = await browser.newContext({ ...devices[dev], serviceWorkers: 'allow' });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));

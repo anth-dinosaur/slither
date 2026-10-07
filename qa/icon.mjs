@@ -3,7 +3,7 @@ import { chromium } from 'playwright';
 import fs from 'node:fs';
 const URL = process.argv[2];
 const b = await chromium.launch();
-const p = await (await b.newContext({ ignoreHTTPSErrors: true })).newPage();
+const p = await (await b.newContext()).newPage();
 await p.goto(URL);
 for (const size of [180, 192, 512]) {
   const data = await p.evaluate(async (size) => {

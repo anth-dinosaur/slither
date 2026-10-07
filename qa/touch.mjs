@@ -3,8 +3,8 @@
 import { chromium, devices } from 'playwright';
 
 const URL = process.argv[2] || 'http://localhost:8080/';
-const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required', '--ignore-certificate-errors'] });
-const ctx = await browser.newContext({ ...devices['iPhone 13'], ignoreHTTPSErrors: true });
+const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+const ctx = await browser.newContext({ ...devices['iPhone 13'] });
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
