@@ -45,7 +45,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`SLITHER//CC online on ${HOST}:${PORT}`);
+  console.log(`SLITHER online on ${HOST}:${PORT}`);
   console.log(`  local: http://localhost:${PORT}/`);
   for (const addrs of Object.values(os.networkInterfaces())) {
     for (const a of addrs || []) {
