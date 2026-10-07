@@ -6,7 +6,8 @@
   "description": "Cyber/glitch snake for iPhone — swipe controls, wrap-around edges.",
   "scripts": {
     "start": "node server.js",
-    "qa": "node qa/qa.mjs"
+    "qa": "node qa/qa.mjs",
+    "qa:offline": "node qa/offline.mjs && node qa/offline-webkit.mjs"
   },
   "devDependencies": {
     "playwright": "^1.63.0"

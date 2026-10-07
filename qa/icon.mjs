@@ -1,11 +1,11 @@
-// Renders the app icon with the game's own drawing code → public/icon-{180,512}.png
+// Renders the app icon with the game's own drawing code → public/icon-{180,192,512}.png
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 const URL = process.argv[2];
 const b = await chromium.launch();
-const p = await b.newPage();
+const p = await (await b.newContext({ ignoreHTTPSErrors: true })).newPage();
 await p.goto(URL);
-for (const size of [180, 512]) {
+for (const size of [180, 192, 512]) {
   const data = await p.evaluate(async (size) => {
     const { drawSnake, hexA } = await import('/src/render.js');
     const { getFoodSprite } = await import('/src/icons.js');

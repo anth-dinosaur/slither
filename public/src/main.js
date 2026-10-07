@@ -650,6 +650,11 @@ window.addEventListener('orientationchange', () => setTimeout(resize, 250));
 resize();
 requestAnimationFrame(frame);
 
+// Offline PWA: service workers need a secure context (HTTPS or localhost).
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  navigator.serviceWorker.register('sw.js').catch((err) => console.warn('service worker:', err));
+}
+
 // Debug/QA hook (harmless in production).
 window.__slither = {
   get state() {

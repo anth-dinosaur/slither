@@ -1,3 +1,5 @@
 node_modules/
 qa/shots/
 .DS_Store
+.port
+.certs/

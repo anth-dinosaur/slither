@@ -8,7 +8,7 @@ const OUT = process.argv[3] || 'qa/shots';
 fs.mkdirSync(OUT, { recursive: true });
 
 const browser = await webkit.launch();
-const ctx = await browser.newContext({ ...devices['iPhone 15 Pro'] });
+const ctx = await browser.newContext({ ...devices['iPhone 15 Pro'], ignoreHTTPSErrors: true });
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message} @ ${(e.stack||"").split("\n").slice(0,4).join(" | ")}`));
