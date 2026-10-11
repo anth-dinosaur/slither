@@ -9,6 +9,7 @@
     "qa": "node qa/qa.mjs",
     "build": "node scripts/build.js",
     "deploy": "node scripts/deploy.js",
+    "qa:presets": "node qa/presets.mjs",
     "qa:offline": "node qa/offline.mjs && node qa/offline-webkit.mjs"
   },
   "devDependencies": {

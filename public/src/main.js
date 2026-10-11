@@ -10,6 +10,10 @@ import {
   BOARD_STYLES,
   BOARD_COLORS,
   DIFFICULTIES,
+  DEFAULTS,
+  loadPresets,
+  savePresets,
+  sameSettings,
 } from './settings.js';
 import { Game, DIRS, autopilot } from './game.js';
 import { Renderer, paintShapeChip, paintStyleChip, paintFoodChip, foodColor } from './render.js';
@@ -22,6 +26,7 @@ const previewCanvas = $('preview');
 const preview = new Renderer(previewCanvas, { preview: true });
 
 let settings = loadSettings();
+let presets = loadPresets();
 let state = 'title'; // title | ready | playing | paused | dying | over
 let resumeState = 'ready';
 let game = null;
@@ -420,17 +425,87 @@ function applyTheme() {
   setVolume(settings.volume);
 }
 
-function set(key, value) {
-  const prevSize = difficulty().size;
-  settings[key] = value;
+// Apply a settings change: persist, retheme, and rebuild the grid if its size moved.
+function commit(prevSize) {
   saveSettings(settings);
   applyTheme();
-  if (key === 'difficulty' && difficulty().size !== prevSize) {
+  if (difficulty().size !== prevSize) {
     if (state === 'title') newDemo();
     else if (game) gridDirty = true;
   }
   if (game) updateHud();
+  renderSlots();
+}
+
+function set(key, value) {
+  const prevSize = difficulty().size;
+  settings[key] = value;
+  commit(prevSize);
   buildTab();
+}
+
+// ---------- preset slots ----------
+
+const esc = (str) => String(str).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+function dot(list, id) {
+  const c = byId(list, id).c;
+  return c.startsWith('#') ? `<i style="--c:${c}"></i>` : `<i class="${c}"></i>`;
+}
+
+function dots(p) {
+  if (!p) return '<span class="dots empty"><i></i><i></i><i></i></span>';
+  const s = p.settings;
+  return `<span class="dots">${dot(SNAKE_COLORS, s.snakeColor)}${dot(FOOD_COLORS, s.foodColor)}${dot(BOARD_COLORS, s.boardColor)}</span>`;
+}
+
+const isActive = (p) => p && sameSettings(p.settings, settings);
+
+// The one-tap strip on the title and pause screens.
+function renderSlots() {
+  const html = `<div class="slots-label"><span>PRESETS</span><span>TAP TO LOAD</span></div><div class="slots-row">${presets
+    .map(
+      (p, i) =>
+        `<button class="slot ${p ? '' : 'empty'} ${isActive(p) ? 'on' : ''}" data-slot="${i}" aria-label="${p ? `Load ${esc(p.name)}` : `Save to slot ${i + 1}`}">${dots(p)}<span class="nm">${p ? esc(p.name) : '+ SAVE'}</span></button>`,
+    )
+    .join('')}</div>`;
+  $('slots-title').innerHTML = html;
+  $('slots-pause').innerHTML = html;
+}
+
+function loadPreset(i) {
+  const p = presets[i];
+  if (!p) return;
+  const prevSize = difficulty().size;
+  Object.assign(settings, DEFAULTS, p.settings);
+  commit(prevSize);
+  toast(`LOADED // ${p.name}`);
+}
+
+function storePreset(i) {
+  presets[i] = { name: presets[i]?.name || `SLOT ${i + 1}`, settings: { ...settings } };
+  savePresets(presets);
+  renderSlots();
+}
+
+function clearPreset(i) {
+  presets[i] = null;
+  savePresets(presets);
+  renderSlots();
+}
+
+for (const id of ['slots-title', 'slots-pause']) {
+  $(id).addEventListener('click', (e) => {
+    const b = e.target.closest('[data-slot]');
+    if (!b) return;
+    unlockAudio();
+    const i = Number(b.dataset.slot);
+    if (presets[i]) loadPreset(i);
+    else {
+      storePreset(i);
+      toast(`SAVED // SLOT ${i + 1}`);
+    }
+  });
 }
 
 function openSettings(from) {
@@ -522,6 +597,11 @@ function buildTab() {
       }),
     );
     html += `<div class="note">GRID SIZE + BASE CLOCK ARE SET BY DIFFICULTY. SNAKE SPEED (SNAKE TAB) MULTIPLIES THE CLOCK. THE CLOCK ALSO CREEPS UP AS YOU EAT.</div>`;
+  } else if (tab === 'slots') {
+    html += `<div class="note">SAVE YOUR CURRENT CONFIG TO A SLOT, NAME IT, THEN LOAD IT IN ONE TAP FROM THE TITLE OR PAUSE SCREEN.</div>`;
+    presets.forEach((p, i) => {
+      html += `<div class="slot-card ${isActive(p) ? 'on' : ''}"><div class="slot-card-head"><span class="num">0${i + 1}</span>${dots(p)}<input class="slot-name" data-slot-name="${i}" maxlength="10" placeholder="${p ? `SLOT ${i + 1}` : 'EMPTY'}" value="${p ? esc(p.name) : ''}" ${p ? '' : 'disabled'} autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" aria-label="Slot ${i + 1} name" /></div><div class="slot-actions"><button class="btn small primary" data-slot-act="load" data-i="${i}" ${p ? '' : 'disabled'}><span>LOAD</span></button><button class="btn small" data-slot-act="save" data-i="${i}"><span>SAVE</span></button><button class="btn small ghost" data-slot-act="clear" data-i="${i}" ${p ? '' : 'disabled'}><span>CLEAR</span></button></div></div>`;
+    });
   } else {
     html += `<div class="group"><div class="row"><div><div class="name">SOUND FX</div><div class="desc">RANDOMIZED FART ON EVERY FOOD PICKUP.<br/>WOMP WOMP WHEN YOU DIE.</div></div><button class="toggle ${settings.sound ? 'on' : ''}" id="tgl-sound" aria-label="Sound"></button></div></div>`;
     html += group(
@@ -542,6 +622,22 @@ function buildTab() {
       set(key, b.dataset.val);
     }),
   );
+  body.querySelectorAll('[data-slot-act]').forEach((b) =>
+    b.addEventListener('click', () => slotAction(b, b.dataset.slotAct, Number(b.dataset.i))),
+  );
+  body.querySelectorAll('[data-slot-name]').forEach((inp) => {
+    const i = Number(inp.dataset.slotName);
+    inp.addEventListener('input', () => {
+      if (!presets[i]) return;
+      presets[i].name = inp.value.trim().toUpperCase() || `SLOT ${i + 1}`;
+      savePresets(presets);
+      renderSlots();
+    });
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') inp.blur();
+    });
+    inp.addEventListener('blur', () => (inp.value = presets[i]?.name || ''));
+  });
   const tgl = $('tgl-sound');
   if (tgl)
     tgl.addEventListener('click', () => {
@@ -556,7 +652,10 @@ function buildTab() {
       rng.closest('.group').querySelector('b').textContent = `${Math.round(settings.volume * 100)}%`;
       setVolume(settings.volume);
     });
-    rng.addEventListener('change', () => saveSettings(settings));
+    rng.addEventListener('change', () => {
+      saveSettings(settings);
+      renderSlots();
+    });
   }
   const tf = $('btn-test-fart');
   if (tf)
@@ -571,6 +670,47 @@ function buildTab() {
       womp();
     });
   requestAnimationFrame(() => paintChips(0));
+}
+
+// Overwrite and clear need a second tap so nobody wipes someone else's slot by accident.
+let armed = null;
+let armTimer = 0;
+function disarm() {
+  clearTimeout(armTimer);
+  if (!armed) return;
+  armed.classList.remove('warn');
+  armed.querySelector('span').textContent = armed.dataset.slotAct.toUpperCase();
+  armed = null;
+}
+
+function slotAction(btn, act, i) {
+  unlockAudio();
+  const risky = presets[i] && act !== 'load';
+  if (risky && armed !== btn) {
+    disarm();
+    armed = btn;
+    btn.classList.add('warn');
+    btn.querySelector('span').textContent = 'SURE?';
+    armTimer = setTimeout(disarm, 2500);
+    return;
+  }
+  disarm();
+  const wasEmpty = !presets[i];
+  if (act === 'load') loadPreset(i);
+  else if (act === 'save') {
+    storePreset(i);
+    toast(`SAVED // ${presets[i].name}`);
+  } else {
+    clearPreset(i);
+    toast(`CLEARED // SLOT ${i + 1}`);
+  }
+  buildTab();
+  // Fresh slot: jump straight to naming it.
+  if (act === 'save' && wasEmpty) {
+    const inp = document.querySelector(`[data-slot-name="${i}"]`);
+    inp.focus();
+    inp.select();
+  }
 }
 
 function paintChips(t) {
@@ -645,6 +785,7 @@ function frame(now) {
 // ---------- boot ----------
 
 applyTheme();
+renderSlots();
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 250));
 resize();
@@ -669,7 +810,11 @@ window.__slither = {
   get settings() {
     return settings;
   },
+  get presets() {
+    return presets;
+  },
   steer,
   startRun,
   set,
+  loadPreset,
 };
