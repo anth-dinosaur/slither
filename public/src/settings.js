@@ -101,3 +101,30 @@ export function saveSettings(s) {
 }
 
 export const byId = (list, id) => list.find((o) => o.id === id) || list[0];
+
+// Three named config save slots (not game state). Each slot is null or { name, settings }.
+export const SLOT_COUNT = 3;
+const PRESETS_KEY = 'slither-cc.presets.v1';
+
+export function loadPresets() {
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]');
+  } catch {
+    /* corrupt — start empty */
+  }
+  return Array.from({ length: SLOT_COUNT }, (_, i) => {
+    const p = Array.isArray(saved) ? saved[i] : null;
+    return p && p.settings ? { name: String(p.name || `SLOT ${i + 1}`), settings: { ...DEFAULTS, ...p.settings } } : null;
+  });
+}
+
+export function savePresets(presets) {
+  try {
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+  } catch {
+    /* private mode — fine */
+  }
+}
+
+export const sameSettings = (a, b) => Object.keys(DEFAULTS).every((k) => a[k] === b[k]);
