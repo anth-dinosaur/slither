@@ -83,8 +83,28 @@ await shot('p02-config-slots');
 await page.tap('[data-slot-act="save"][data-i="0"]');
 check((await S(() => window.__slither.presets[0].settings.snakeColor)) === 'magenta', 'first overwrite tap only arms');
 await shot('p03-armed');
+// Arming another button disarms the first.
+await page.tap('[data-slot-act="clear"][data-i="0"]');
+check((await page.locator('[data-slot-act="save"][data-i="0"]').innerText()) === 'SAVE', 'arming another button resets the first');
 await page.waitForTimeout(2700);
-check((await page.locator('[data-slot-act="save"][data-i="0"]').innerText()) === 'SAVE', 'armed button resets');
+check((await page.locator('[data-slot-act="clear"][data-i="0"]').innerText()) === 'CLEAR', 'armed button resets after timeout');
+
+// Confirmed overwrite stores the current config (LEO's), then restore JAMES.
+await page.tap('[data-slot-act="save"][data-i="0"]');
+await page.tap('[data-slot-act="save"][data-i="0"]');
+const ow = await S(() => window.__slither.presets[0]);
+check(ow.settings.snakeColor === 'acid' && ow.name === 'JAMES', 'second tap overwrites slot and keeps its name');
+await S(() => {
+  const s = window.__slither;
+  s.set('snakeColor', 'magenta');
+  s.set('snakeShape', 'hex');
+  s.set('boardColor', 'cyan');
+  s.set('boardStyle', 'grid');
+  s.set('difficulty', 'hard');
+});
+await page.tap('[data-slot-act="save"][data-i="0"]');
+await page.tap('[data-slot-act="save"][data-i="0"]');
+await page.tap('[data-slot-act="load"][data-i="1"]');
 
 await page.tap('#btn-settings-back');
 await page.waitForTimeout(300);

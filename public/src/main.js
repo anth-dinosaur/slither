@@ -674,22 +674,27 @@ function buildTab() {
 
 // Overwrite and clear need a second tap so nobody wipes someone else's slot by accident.
 let armed = null;
+let armTimer = 0;
+function disarm() {
+  clearTimeout(armTimer);
+  if (!armed) return;
+  armed.classList.remove('warn');
+  armed.querySelector('span').textContent = armed.dataset.slotAct.toUpperCase();
+  armed = null;
+}
+
 function slotAction(btn, act, i) {
   unlockAudio();
   const risky = presets[i] && act !== 'load';
   if (risky && armed !== btn) {
+    disarm();
     armed = btn;
     btn.classList.add('warn');
     btn.querySelector('span').textContent = 'SURE?';
-    setTimeout(() => {
-      if (armed !== btn) return;
-      armed = null;
-      btn.classList.remove('warn');
-      btn.querySelector('span').textContent = act.toUpperCase();
-    }, 2500);
+    armTimer = setTimeout(disarm, 2500);
     return;
   }
-  armed = null;
+  disarm();
   const wasEmpty = !presets[i];
   if (act === 'load') loadPreset(i);
   else if (act === 'save') {
